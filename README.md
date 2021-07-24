@@ -1,6 +1,6 @@
 # Injector
 
-**TODO: Add description**
+**Context Dependency Injection for Elixir*
 
 ## Installation
 
