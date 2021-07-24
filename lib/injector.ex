@@ -1,18 +1,5 @@
 defmodule Injector do
   @moduledoc """
-  Documentation for `Injector`.
+  `Injector` is a entrypoint to CDI.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Injector.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
