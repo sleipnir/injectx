@@ -1,52 +1,8 @@
 defmodule Injector do
-  @moduledoc """
-  `Injector` is a entrypoint to CDI.
-
-  ## Usage:
-
-  1. Define your Behavior module.
-
-  ```
-  defmodule FooBehavior do
-    @callback greetings(String.t()) :: String.t()
-  end
-  ```
-
-  2. Implement it.
-
-  ```
-  defmodule FooImpl do
-    @behavior FooBehavior
-
-    @impl true
-    def greetings(_name) do
-      "Hello from FooImpl"
-    end
-  end
-  ```
-
-  3. Initialize Injector Context on Application bootstrap.
-
-  ```
-
-  ```
-
-  4. Use your behavior via Implementation resolved in runtime.
-
-  ```
-  defmodule Bar do
-    use Injector
-
-    @inject FooBehavior
-
-    def greetings(name), do: FooBehavior.greetings(name)
-  end
-  ```
-
-  ## Or in some point of your code:
-  ...
-  implementations = Injector.Context.bindings('test', FooBehavior) # resolve all bindings for certain behavior
-  """
+  @moduledoc "README.md"
+             |> File.read!()
+             |> String.split("<!-- MDOC !-->")
+             |> Enum.fetch!(1)
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do

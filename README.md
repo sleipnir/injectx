@@ -1,6 +1,8 @@
 # Injector
 
-**Context Dependency Injection for Elixir*
+<!-- MDOC !-->
+
+**Context Dependency Injection for Elixir**
 
 ## Installation
 
@@ -15,7 +17,52 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/injector](https://hexdocs.pm/injector).
+`Injector` module is a entrypoint to CDI.
 
+## Usage:
+
+Define your Behavior module:
+
+```elixir
+defmodule FooBehavior do
+  @callback greetings(String.t()) :: String.t()
+end
+```
+
+Implement it:
+
+```elixir
+defmodule FooImpl do
+  @behavior FooBehavior
+
+  @impl true
+  def greetings(_name) do
+    "Hello from FooImpl"
+  end
+end
+```
+
+Initialize Injector Context on Application bootstrap:
+
+```elixir
+
+```
+
+Use your behavior via Implementation resolved in runtime:
+
+```elixir
+defmodule Bar do
+  use Injector
+
+  @inject FooBehavior
+
+  def greetings(name), do: FooBehavior.greetings(name)
+end
+```
+
+### Or in some point of your code:
+
+```elixir
+# resolve all bindings for certain behavior
+implementations = Injector.Context.bindings('test', FooBehavior)
+```
