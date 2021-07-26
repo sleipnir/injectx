@@ -1,6 +1,30 @@
 defmodule Injector do
   @moduledoc """
   `Injector` is a entrypoint to CDI.
+
+  defmodule FooBehavior do
+    @callback greetings(String.t()) :: String.t()
+  end
+
+  defmodule FooImpl do
+    @behavior FooBehavior
+
+    def greetings(message), do: 'Hello #{message}'
+  end
+
+  defmodule Bar do
+    use Injector
+
+    @inject FooBehavior
+    @inject BarBehaviour
+
+    def greetings(name), do: FooBehavior.greetings(name)
+  end
+
+  Or
+  ...
+  implementations = Injector.Context.bindings('test', FooBehavior)
+
   """
 
   defmacro __using__(opts) do
