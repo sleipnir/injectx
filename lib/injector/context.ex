@@ -103,7 +103,7 @@ defmodule Injector.Context do
     end)
   end
 
-  def bindings(name, behavior) do
+  defp bindings(name, behavior) do
     Agent.get(name, fn bindings ->
       bindings.bindings
       |> Enum.filter(fn binding -> binding.behavior == behavior end)
