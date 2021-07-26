@@ -51,10 +51,8 @@ defmodule Injector.Context do
         Agent.update(context.name, fn state -> Map.merge(state, %{bindings: context.bindings}) end)
 
       {:error, {:already_started, _pid}} ->
-        nil
+        :ok
     end
-
-    :ok
   end
 
   @spec inject(behavior()) :: implementation()
