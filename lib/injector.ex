@@ -10,7 +10,15 @@ defmodule Injector do
 
       @options opts
 
+      @before_compile __before_compile__()
+
       Module.register_attribute(__MODULE__, :inject, accumulate: true)
+    end
+  end
+
+  defmacro inject(behaviour) do
+    quote do
+      @inject unquote(behaviour)
     end
   end
 
@@ -25,7 +33,7 @@ defmodule Injector do
 
   defp resolve_bindings(injection_points) do
     # TODO resolve points
-    Enum.map(injection_points, fn point -> nil end)
+    Enum.map(injection_points, fn _point -> nil end)
   end
 
   defmacro __before_compile__(env) do
