@@ -40,8 +40,9 @@ defmodule Injector.Context do
   end
 
   @spec from_config(atom()) :: :ok | {:error, :not_found}
-  def from_config(_otp_app) do
-    :ok
+  def from_config(otp_app) do
+    context = Application.get_env(otp_app, Injector, :context)
+    from_definition(context)
   end
 
   @spec from_definition(Context.t()) :: :ok

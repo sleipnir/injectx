@@ -43,9 +43,9 @@ defmodule InjectorTest do
       @moduledoc false
       use Injector
 
-      @behaviour_impl inject(TestBehaviour)
+      @implementation inject(TestBehaviour)
 
-      def test(n), do: @behaviour_impl.test(n)
+      def test(n), do: @implementation.test(n)
     end
 
     assert {:ok, 1} = TestInjector.test(1)
