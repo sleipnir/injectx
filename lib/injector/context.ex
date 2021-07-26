@@ -62,11 +62,11 @@ defmodule Injector.Context do
   @spec inject(atom(), behavior()) :: implementation()
   def inject(name, behavior), do: binding(name, behavior)
 
-  @spec injects(behavior()) :: implementations()
-  def injects(behavior), do: bindings(ApplicationContext, behavior)
+  @spec inject_all(behavior()) :: implementations()
+  def inject_all(behavior), do: bindings(ApplicationContext, behavior)
 
-  @spec injects(atom(), behavior()) :: implementations()
-  def injects(name, behavior), do: bindings(name, behavior)
+  @spec inject_all(atom(), behavior()) :: implementations()
+  def inject_all(name, behavior), do: bindings(name, behavior)
 
   defp binding(name, behavior) do
     Agent.get(name, fn bindings ->

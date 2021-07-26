@@ -94,7 +94,7 @@ defmodule Caller do
   use Injector
 
   # resolve all injection bindings for certain behavior
-  @foo_behaviours injects(TestBehaviour)
+  @foo_behaviours inject_all(TestBehaviour)
 
 ....
   def call(), 

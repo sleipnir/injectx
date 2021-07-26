@@ -56,7 +56,7 @@ defmodule InjectorTest do
       @moduledoc false
       use Injector
 
-      @implementations injects(TestBehaviour)
+      @implementations inject_all(TestBehaviour)
 
       def test(n), do: Enum.map(@implementations, fn impl -> impl.test(n) end)
     end
