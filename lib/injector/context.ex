@@ -60,6 +60,7 @@ defmodule Injector.Context do
       bindings
       |> Enum.filter(fn binding -> binding.behavior == behavior end)
       |> Enum.find(fn definition -> definition.default end)
+      |> Enum.map(fn definition -> definition.module end)
     end)
   end
 
@@ -68,6 +69,7 @@ defmodule Injector.Context do
     Agent.get(name, fn bindings ->
       bindings
       |> Enum.filter(fn binding -> binding.behavior == behavior end)
+      |> Enum.map(fn definition -> definition.module end)
     end)
   end
 end
