@@ -8,9 +8,9 @@ defmodule Injector do
       alias Injector
       require Injector
 
-      @options opts
+      @before_compile Injector
 
-      @before_compile __before_compile__()
+      @options opts
 
       Module.register_attribute(__MODULE__, :inject, accumulate: true)
     end
