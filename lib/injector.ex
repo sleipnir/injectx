@@ -8,12 +8,14 @@ defmodule Injector do
     quote bind_quoted: [opts: opts] do
       alias Injector
       require Injector
+      import Injector.Context
 
-      @before_compile Injector
-
+      @imports []
       @options opts
 
       Module.register_attribute(__MODULE__, :inject, accumulate: true)
+
+      @on_definition Injector
     end
   end
 
@@ -28,19 +30,8 @@ defmodule Injector do
   end
 
   defp resolve_bindings(context_name, injection_points) do
-    # TODO resolve points
     Enum.map(injection_points, fn injection_point ->
-      Injector.Context.binding(context_name, injection_point)
+      Injector.Context.inject(context_name, injection_point)
     end)
-  end
-
-  defmacro __before_compile__(env) do
-    imports = Module.get_attribute(env.module, :imports)
-
-    for {import_alias, import} <- imports do
-      quote bind_quoted: [import: import, import_alias: import_alias] do
-        alias import, as: import_alias
-      end
-    end
   end
 end

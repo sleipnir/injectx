@@ -5,10 +5,13 @@ defmodule Injector.Context do
   @type implementation :: module()
   @type implementations :: list()
 
-  defstruct [:name, :bindings]
+  defstruct [
+    :bindings,
+    name: ApplicationContext
+  ]
 
   @type t() :: %__MODULE__{
-          name: atom(),
+          name: atom() | ApplicationContext,
           bindings: list()
         }
 
@@ -27,11 +30,11 @@ defmodule Injector.Context do
   end
 
   defmodule BindingDefinition do
-    defstruct [:module, :alias, :default]
+    defstruct [:module, :name, default: false]
 
     @type t() :: %__MODULE__{
             module: module(),
-            alias: atom() | nil,
+            name: atom() | nil,
             default: boolean() | false
           }
   end
@@ -54,45 +57,80 @@ defmodule Injector.Context do
     :ok
   end
 
-  @spec binding(String.t(), behavior()) :: implementation()
-  def binding(name, behavior) do
-    Agent.get(name, fn bindings ->
-      bindings
-      |> Enum.filter(fn binding -> binding.behavior == behavior end)
-      |> Enum.find(fn definition -> definition.default end)
-      |> Enum.map(fn definition ->
-        alias =
-          if definition.alias != nil do
-            definition.alias
-          else
-            behavior
-            |> Module.split()
-            |> List.last()
-            |> String.to_existing_atom()
-          end
+  @spec inject(behavior()) :: implementation()
+  def inject(behavior), do: binding(ApplicationContext, behavior)
 
-        {alias, definition.module}
-      end)
+  @spec inject(atom(), behavior()) :: implementation()
+  def inject(name, behavior), do: binding(name, behavior)
+
+  @spec injects(behavior()) :: implementations()
+  def injects(behavior), do: bindings(ApplicationContext, behavior)
+
+  @spec injects(atom(), behavior()) :: implementations()
+  def injects(name, behavior), do: bindings(name, behavior)
+
+  defp binding(name, behavior) do
+    Agent.get(name, fn bindings ->
+      definition =
+        bindings.bindings
+        |> Enum.filter(fn binding -> binding.behavior == behavior end)
+        |> Enum.flat_map(fn binding -> binding.definitions end)
+        |> Enum.find(fn definition -> definition.default end)
+
+      # TODO: Future use
+      _module_name =
+        if definition.name != nil do
+          definition.name
+          |> to_string()
+          |> Code.eval_string()
+          |> case do
+            {m, []} -> m
+            _ -> raise "Attempt to resolve Alias failed"
+          end
+        else
+          behavior
+          |> Module.split()
+          |> List.last()
+          |> Kernel.<>("Impl")
+          |> Code.eval_string()
+          |> case do
+            {m, []} -> m
+            _ -> raise "Attempt to resolve Alias failed"
+          end
+        end
+
+      definition.module
     end)
   end
 
-  @spec bindings(String.t(), behavior()) :: implementations()
   def bindings(name, behavior) do
     Agent.get(name, fn bindings ->
-      bindings
+      bindings.bindings
       |> Enum.filter(fn binding -> binding.behavior == behavior end)
+      |> Enum.flat_map(fn binding -> binding.definitions end)
       |> Enum.map(fn definition ->
-        alias =
-          if definition.alias != nil do
-            definition.alias
+        # TODO: Future use
+        _name =
+          if definition.name != nil do
+            definition.name
+            |> to_string()
+            |> Code.eval_string()
+            |> case do
+              {m, []} -> m
+              _ -> raise "Attempt to resolve Alias failed"
+            end
           else
             behavior
             |> Module.split()
             |> List.last()
-            |> String.to_existing_atom()
+            |> Code.eval_string()
+            |> case do
+              {m, []} -> m
+              _ -> raise "Attempt to resolve Alias failed"
+            end
           end
 
-        {definition.alias, definition.module}
+        definition.module
       end)
     end)
   end

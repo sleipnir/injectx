@@ -45,7 +45,34 @@ end
 Initialize Injector Context on Application bootstrap:
 
 ```elixir
+defmodule App do
+  use Application
 
+  alias Injector.Context
+
+  @impl true
+  def start(_type, _args) do
+    definition = %Context{
+      bindings: [
+        %Context.Binding{
+          behavior: FooBehavior,
+          definitions: [
+            %Context.BindingDefinition{module: FooImpl, default: true}
+          ]
+        }
+      ]
+    }
+
+    Context.from_definition(definition)
+
+    children = [
+      ...
+    ]
+
+    opts = [strategy: :one_for_one, name: App.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
 ```
 
 Use your behavior via Implementation resolved in runtime:
@@ -54,15 +81,23 @@ Use your behavior via Implementation resolved in runtime:
 defmodule Bar do
   use Injector
 
-  @inject FooBehavior
+  @foo_behaviour inject(TestBehaviour)
 
-  def greetings(name), do: FooBehavior.greetings(name)
+  def greetings(name), do: @foo_behaviour.greetings(name)
 end
 ```
 
-### Or in some point of your code:
+### Or you can inject all implementations at once:
 
 ```elixir
-# resolve all bindings for certain behavior
-implementations = Injector.Context.bindings('test', FooBehavior)
+defmodule Caller do
+  use Injector
+
+  # resolve all injection bindings for certain behavior
+  @foo_behaviours injects(TestBehaviour)
+
+....
+  def call(), 
+    do: Enum.each(@foo_behaviours, fn impl -> impl.greetings("Teddy") end)
+end
 ```
