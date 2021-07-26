@@ -60,7 +60,19 @@ defmodule Injector.Context do
       bindings
       |> Enum.filter(fn binding -> binding.behavior == behavior end)
       |> Enum.find(fn definition -> definition.default end)
-      |> Enum.map(fn definition -> definition.module end)
+      |> Enum.map(fn definition ->
+        alias =
+          if definition.alias != nil do
+            definition.alias
+          else
+            behavior
+            |> Module.split()
+            |> List.last()
+            |> String.to_existing_atom()
+          end
+
+        {alias, definition.module}
+      end)
     end)
   end
 
@@ -69,7 +81,19 @@ defmodule Injector.Context do
     Agent.get(name, fn bindings ->
       bindings
       |> Enum.filter(fn binding -> binding.behavior == behavior end)
-      |> Enum.map(fn definition -> definition.module end)
+      |> Enum.map(fn definition ->
+        alias =
+          if definition.alias != nil do
+            definition.alias
+          else
+            behavior
+            |> Module.split()
+            |> List.last()
+            |> String.to_existing_atom()
+          end
+
+        {definition.alias, definition.module}
+      end)
     end)
   end
 end

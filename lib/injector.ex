@@ -37,9 +37,9 @@ defmodule Injector do
   defmacro __before_compile__(env) do
     imports = Module.get_attribute(env.module, :imports)
 
-    for import <- imports do
-      quote bind_quoted: [import: import] do
-        alias import
+    for {import_alias, import} <- imports do
+      quote bind_quoted: [import: import, import_alias: import_alias] do
+        alias import, as: import_alias
       end
     end
   end
