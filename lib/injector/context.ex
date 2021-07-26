@@ -55,7 +55,12 @@ defmodule Injector.Context do
   end
 
   @spec binding(String.t(), behavior()) :: implementation()
-  def binding(_name, _behavior) do
+  def binding(name, behavior) do
+    Agent.get(name, fn bindings ->
+      bindings
+      |> Enum.filter(fn binding -> binding.behavior == behavior end)
+      |> Enum.find(fn definition -> definition.default end)
+    end)
   end
 
   @spec bindings(String.t(), behavior()) :: implementations()

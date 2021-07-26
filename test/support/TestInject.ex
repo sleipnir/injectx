@@ -14,7 +14,7 @@ defmodule TestInjector do
   @moduledoc false
   use Injector
 
-  inject(TestBehaviour)
+  @inject TestBehaviour
 
   def test(n), do: TestBehaviour.test(n)
 end
