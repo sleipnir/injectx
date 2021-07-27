@@ -35,7 +35,7 @@ defmodule InjectorTest do
       ]
     }
 
-    Context.from_definition(definition)
+    Context.from(definition)
   end
 
   test "inject the default implementation of Behavior" do

@@ -63,7 +63,7 @@ defmodule App do
       ]
     }
 
-    Context.from_definition(definition)
+    Context.from(definition)
 
     children = [
       ...

@@ -39,14 +39,8 @@ defmodule Injector.Context do
           }
   end
 
-  @spec from_config(atom()) :: :ok | {:error, :not_found}
-  def from_config(otp_app) do
-    context = Application.get_env(otp_app, Injector, :context)
-    from_definition(context)
-  end
-
-  @spec from_definition(Context.t()) :: :ok
-  def from_definition(context) do
+  @spec from(Context.t()) :: :ok
+  def from(context) do
     case Agent.start_link(fn -> %{} end, name: context.name) do
       {:ok, _pid} ->
         Agent.update(context.name, fn state -> Map.merge(state, %{bindings: context.bindings}) end)
@@ -54,6 +48,12 @@ defmodule Injector.Context do
       {:error, {:already_started, _pid}} ->
         :ok
     end
+  end
+
+  @spec from_config(atom()) :: :ok | {:error, :not_found}
+  def from_config(otp_app) do
+    context = Application.get_env(otp_app, Injector, :context)
+    from(context)
   end
 
   @spec inject(behavior()) :: implementation()
