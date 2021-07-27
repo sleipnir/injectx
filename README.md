@@ -52,7 +52,7 @@ defmodule App do
 
   @impl true
   def start(_type, _args) do
-    definition = %Context{
+    context = %Context{
       bindings: [
         %Context.Binding{
           behavior: FooBehavior,
@@ -63,7 +63,7 @@ defmodule App do
       ]
     }
 
-    Context.from(definition)
+    Context.from(context)
 
     children = [
       ...
@@ -100,4 +100,60 @@ defmodule Caller do
   def call(), 
     do: Enum.each(@foo_behaviours, fn impl -> impl.greetings("Teddy") end)
 end
+```
+
+### Dispatching
+
+Injector also provides the ability to dynamically dispatch your implementations.
+For this it is only necessary to use the dispatcher function. Sync and Async are possible options:
+
+```elixir
+defmodule SomeBehaviour do
+    @callback test(integer()) :: {:ok, integer()}
+end
+
+defmodule SomeImpl1 do
+  @behaviour SomeBehaviour
+
+  def test(1), do: {:ok, 1}
+end
+
+defmodule SomeImpl2 do
+  @behaviour SomeBehaviour
+
+  def test(1), do: {:ok, 2}
+end
+
+... bootstrap
+  @impl true
+  def start(_type, _args) do
+    context = %Context{
+      bindings: [
+        %Context.Binding{
+          behavior: SomeBehaviour,
+          definitions: [
+            %Context.BindingDefinition{module: SomeImpl1, default: true},
+            %Context.BindingDefinition{module: SomeImpl2}
+          ]
+        }
+      ]
+    }
+
+    Context.from(context)
+    ....
+  end
+
+...write some client module...
+
+defmodule SomeClientModule do
+  use Injector
+
+  def call(arg), do: dispatching(TestBehaviour, :test, [arg], async: true)
+   
+end
+
+...then call it `iex -S mix`
+
+iex(1)> SomeClientModule.call(1)
+[{:ok, InjectorTest.TestImpl2, {:ok, 2}}, {:ok, InjectorTest.TestImpl1, {:ok, 1}}]
 ```

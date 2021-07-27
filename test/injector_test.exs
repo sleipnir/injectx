@@ -63,4 +63,27 @@ defmodule InjectorTest do
 
     assert [{:ok, 1}, {:ok, 2}] = TestAllInjector.test(1)
   end
+
+  test "sync dispatching to all implementation of Behavior" do
+    defmodule SyncTestAllImplementations do
+      @moduledoc false
+      use Injector
+
+      def test(n), do: dispatching(TestBehaviour, :test, [n], async: false)
+    end
+
+    assert [{:ok, InjectorTest.TestImpl1, {:ok, 1}}, {:ok, InjectorTest.TestImpl2, {:ok, 2}}] =
+             SyncTestAllImplementations.test(1)
+  end
+
+  test "async dispatching to all implementation of Behavior" do
+    defmodule AsyncTestAllImplementations do
+      @moduledoc false
+      use Injector
+
+      def test(n), do: dispatching(TestBehaviour, :test, [n], async: true)
+    end
+
+    assert [{:ok, _, {:ok, _}}, {:ok, _, {:ok, _}}] = AsyncTestAllImplementations.test(1)
+  end
 end

@@ -68,6 +68,61 @@ defmodule Injector.Context do
   @spec inject_all(atom(), behavior()) :: implementations()
   def inject_all(name, behavior), do: bindings(name, behavior)
 
+  @spec dispatching(module(), atom(), list(), [{:async, boolean}]) ::
+          [{:ok, module(), any()}] | [{:error, module(), any()}]
+  def dispatching(behavior, function_name, args, async: false) when is_list(args) do
+    implementations = bindings(ApplicationContext, behavior)
+    run(implementations, function_name, args)
+  end
+
+  def dispatching(behavior, function_name, args, async: true) when is_list(args) do
+    implementations = bindings(ApplicationContext, behavior)
+    run_async(implementations, function_name, args)
+  end
+
+  @spec dispatching(atom(), module(), atom(), list(), [{:async, boolean}]) ::
+          [{:ok, module(), any()}] | [{:error, module(), any()}]
+  def dispatching(context, behavior, function_name, args, async: false)
+      when is_list(args) do
+    implementations = bindings(context, behavior)
+    run(implementations, function_name, args)
+  end
+
+  def dispatching(context, behavior, function_name, args, async: true) when is_list(args) do
+    implementations = bindings(context, behavior)
+    run_async(implementations, function_name, args)
+  end
+
+  defp run(implementations, function_name, args, _opts \\ []) do
+    Enum.map(implementations, fn impl ->
+      try do
+        result = apply(impl, function_name, args)
+        {:ok, impl, result}
+      rescue
+        error -> {:error, impl, error}
+      end
+    end)
+  end
+
+  defp run_async(implementations, function_name, args, _opts \\ []) do
+    tasks =
+      Enum.reduce(implementations, [], fn impl, acc ->
+        [
+          Task.async(fn ->
+            try do
+              result = apply(impl, function_name, args)
+              {:ok, impl, result}
+            rescue
+              error -> {:error, impl, error}
+            end
+          end)
+          | acc
+        ]
+      end)
+
+    Enum.map(tasks, &Task.await/1)
+  end
+
   defp binding(name, behavior) do
     Agent.get(name, fn bindings ->
       definition =

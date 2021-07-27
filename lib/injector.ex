@@ -8,7 +8,16 @@ defmodule Injector do
     quote bind_quoted: [opts: opts] do
       alias Injector
       require Injector
-      import Injector.Context
+
+      import Injector.Context,
+        only: [
+          inject: 1,
+          inject: 2,
+          inject_all: 1,
+          inject_all: 2,
+          dispatching: 4,
+          dispatching: 5
+        ]
 
       @imports []
       @options opts
