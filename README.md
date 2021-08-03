@@ -1,4 +1,4 @@
-# Injector
+# Injectx
 
 <!-- MDOC !-->
 
@@ -7,17 +7,17 @@
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `injector` to your list of dependencies in `mix.exs`:
+by adding `injectx` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:injector, "~> 0.1.0"}
+    {:injectx, "~> 0.1.0"}
   ]
 end
 ```
 
-`Injector` module is a entrypoint to CDI.
+`Injectx` module is a entrypoint to CDI.
 
 ## Usage:
 
@@ -42,17 +42,17 @@ defmodule FooImpl do
 end
 ```
 
-Initialize Injector Context on Application bootstrap:
+Initialize Injectx Context on Application bootstrap:
 
 ```elixir
 defmodule App do
   use Application
 
-  alias Injector.Context
+  alias Injectx.Context
 
   @impl true
   def start(_type, _args) do
-    definition = %Context{
+    context = %Context{
       bindings: [
         %Context.Binding{
           behavior: FooBehavior,
@@ -63,7 +63,7 @@ defmodule App do
       ]
     }
 
-    Context.from(definition)
+    Context.from(context)
 
     children = [
       ...
@@ -75,29 +75,85 @@ defmodule App do
 end
 ```
 
-Use your behavior via Implementation resolved in runtime:
+### Use your behavior via Implementation resolved in runtime (using inject macro with same sintaxe of alias):
 
 ```elixir
 defmodule Bar do
-  use Injector
+  use Injectx
 
-  @foo_behaviour inject(TestBehaviour)
+  inject TestBehaviour
 
-  def greetings(name), do: @foo_behaviour.greetings(name)
+  def greetings(name), do: TestBehaviour.greetings(name)
 end
 ```
 
-### Or you can inject all implementations at once:
+### Or you can inject all implementations at once (using inject_all function):
 
 ```elixir
 defmodule Caller do
-  use Injector
+  use Injectx
 
   # resolve all injection bindings for certain behavior
-  @foo_behaviours inject_all(TestBehaviour)
+  @all inject_all(TestBehaviour)
 
 ....
   def call(), 
-    do: Enum.each(@foo_behaviours, fn impl -> impl.greetings("Teddy") end)
+    do: Enum.each(@all, fn impl -> impl.greetings("Teddy") end)
 end
+```
+
+## Dispatching
+
+Injectx also provides the ability to dynamically dispatch your implementations.
+For this it is only necessary to use the dispatcher function. Sync and Async are possible options:
+
+```elixir
+defmodule SomeBehaviour do
+    @callback test(integer()) :: {:ok, integer()}
+end
+
+defmodule SomeImpl1 do
+  @behaviour SomeBehaviour
+
+  def test(1), do: {:ok, 1}
+end
+
+defmodule SomeImpl2 do
+  @behaviour SomeBehaviour
+
+  def test(1), do: {:ok, 2}
+end
+
+... bootstrap
+  @impl true
+  def start(_type, _args) do
+    context = %Context{
+      bindings: [
+        %Context.Binding{
+          behavior: SomeBehaviour,
+          definitions: [
+            %Context.BindingDefinition{module: SomeImpl1, default: true},
+            %Context.BindingDefinition{module: SomeImpl2}
+          ]
+        }
+      ]
+    }
+
+    Context.from(context)
+    ....
+  end
+
+...write some client module...
+
+defmodule SomeClientModule do
+  use Injectx
+
+  def call(arg), do: dispatching(TestBehaviour, :test, [arg], async: true)
+   
+end
+
+...then call it `iex -S mix`
+
+iex(1)> SomeClientModule.call(1)
+[{:ok, InjectxTest.TestImpl2, {:ok, 2}}, {:ok, InjectxTest.TestImpl1, {:ok, 1}}]
 ```
