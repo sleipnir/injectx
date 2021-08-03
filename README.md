@@ -75,30 +75,30 @@ defmodule App do
 end
 ```
 
-Use your behavior via Implementation resolved in runtime:
+Use your behavior via Implementation resolved in runtime (using inject macro):
 
 ```elixir
 defmodule Bar do
   use Injectx
 
-  @foo_behaviour inject(TestBehaviour)
+  inject TestBehaviour
 
-  def greetings(name), do: @foo_behaviour.greetings(name)
+  def greetings(name), do: TestBehaviour.greetings(name)
 end
 ```
 
-### Or you can inject all implementations at once:
+### Or you can inject all implementations at once (using inject_all function):
 
 ```elixir
 defmodule Caller do
   use Injectx
 
   # resolve all injection bindings for certain behavior
-  @foo_behaviours inject_all(TestBehaviour)
+  @all inject_all(TestBehaviour)
 
 ....
   def call(), 
-    do: Enum.each(@foo_behaviours, fn impl -> impl.greetings("Teddy") end)
+    do: Enum.each(@all, fn impl -> impl.greetings("Teddy") end)
 end
 ```
 
