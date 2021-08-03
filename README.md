@@ -75,7 +75,7 @@ defmodule App do
 end
 ```
 
-Use your behavior via Implementation resolved in runtime (using inject macro with same sintaxe of alias):
+### Use your behavior via Implementation resolved in runtime (using inject macro with same sintaxe of alias):
 
 ```elixir
 defmodule Bar do
@@ -102,7 +102,7 @@ defmodule Caller do
 end
 ```
 
-### Dispatching
+## Dispatching
 
 Injectx also provides the ability to dynamically dispatch your implementations.
 For this it is only necessary to use the dispatcher function. Sync and Async are possible options:
