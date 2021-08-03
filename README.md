@@ -1,4 +1,4 @@
-# Injector
+# injectx
 
 <!-- MDOC !-->
 
@@ -7,17 +7,17 @@
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `injector` to your list of dependencies in `mix.exs`:
+by adding `injectx` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:injector, "~> 0.1.0"}
+    {:injectx, "~> 0.1.0"}
   ]
 end
 ```
 
-`Injector` module is a entrypoint to CDI.
+`Injectx` module is a entrypoint to CDI.
 
 ## Usage:
 
@@ -42,13 +42,13 @@ defmodule FooImpl do
 end
 ```
 
-Initialize Injector Context on Application bootstrap:
+Initialize Injectx Context on Application bootstrap:
 
 ```elixir
 defmodule App do
   use Application
 
-  alias Injector.Context
+  alias Injectx.Context
 
   @impl true
   def start(_type, _args) do
@@ -79,7 +79,7 @@ Use your behavior via Implementation resolved in runtime:
 
 ```elixir
 defmodule Bar do
-  use Injector
+  use Injectx
 
   @foo_behaviour inject(TestBehaviour)
 
@@ -91,7 +91,7 @@ end
 
 ```elixir
 defmodule Caller do
-  use Injector
+  use Injectx
 
   # resolve all injection bindings for certain behavior
   @foo_behaviours inject_all(TestBehaviour)
@@ -104,7 +104,7 @@ end
 
 ### Dispatching
 
-Injector also provides the ability to dynamically dispatch your implementations.
+Injectx also provides the ability to dynamically dispatch your implementations.
 For this it is only necessary to use the dispatcher function. Sync and Async are possible options:
 
 ```elixir
@@ -146,7 +146,7 @@ end
 ...write some client module...
 
 defmodule SomeClientModule do
-  use Injector
+  use Injectx
 
   def call(arg), do: dispatching(TestBehaviour, :test, [arg], async: true)
    
@@ -155,5 +155,5 @@ end
 ...then call it `iex -S mix`
 
 iex(1)> SomeClientModule.call(1)
-[{:ok, InjectorTest.TestImpl2, {:ok, 2}}, {:ok, InjectorTest.TestImpl1, {:ok, 1}}]
+[{:ok, InjectxTest.TestImpl2, {:ok, 2}}, {:ok, InjectxTest.TestImpl1, {:ok, 1}}]
 ```

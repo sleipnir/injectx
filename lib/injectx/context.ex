@@ -1,5 +1,5 @@
-defmodule Injector.Context do
-  alias Injector.Context
+defmodule Injectx.Context do
+  alias Injectx.Context
 
   @type behavior :: module()
   @type implementation :: module()
@@ -52,7 +52,7 @@ defmodule Injector.Context do
 
   @spec from_config(atom()) :: :ok | {:error, :not_found}
   def from_config(otp_app) do
-    context = Application.get_env(otp_app, Injector, :context)
+    context = Application.get_env(otp_app, Injectx, :context)
     from(context)
   end
 

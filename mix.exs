@@ -1,12 +1,12 @@
-defmodule Injector.MixProject do
+defmodule Injectx.MixProject do
   use Mix.Project
 
   @version "0.1.0"
-  @source_url "https://github.com/sleipnir/injector"
+  @source_url "https://github.com/sleipnir/injectx"
 
   def project do
     [
-      app: :injector,
+      app: :injectx,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,

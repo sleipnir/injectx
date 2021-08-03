@@ -1,4 +1,4 @@
-defmodule Injector do
+defmodule Injectx do
   @moduledoc "README.md"
              |> File.read!()
              |> String.split("<!-- MDOC !-->")
@@ -6,10 +6,10 @@ defmodule Injector do
 
   defmacro __using__(opts) do
     quote bind_quoted: [opts: opts] do
-      alias Injector
-      require Injector
+      alias Injectx
+      require Injectx
 
-      import Injector.Context,
+      import Injectx.Context,
         only: [
           inject: 1,
           inject: 2,
@@ -24,7 +24,7 @@ defmodule Injector do
 
       Module.register_attribute(__MODULE__, :inject, accumulate: true)
 
-      @on_definition Injector
+      @on_definition Injectx
     end
   end
 
@@ -40,7 +40,7 @@ defmodule Injector do
 
   defp resolve_bindings(context_name, injection_points) do
     Enum.map(injection_points, fn injection_point ->
-      Injector.Context.inject(context_name, injection_point)
+      Injectx.Context.inject(context_name, injection_point)
     end)
   end
 end

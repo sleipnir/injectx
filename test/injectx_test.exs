@@ -1,7 +1,7 @@
-defmodule InjectorTest do
+defmodule InjectxTest do
   use ExUnit.Case
 
-  alias Injector.Context
+  alias Injectx.Context
 
   defmodule TestBehaviour do
     @moduledoc false
@@ -39,47 +39,47 @@ defmodule InjectorTest do
   end
 
   test "inject the default implementation of Behavior" do
-    defmodule TestInjector do
+    defmodule TestInjectx do
       @moduledoc false
-      use Injector
+      use Injectx
 
       @implementation inject(TestBehaviour)
 
       def test(n), do: @implementation.test(n)
     end
 
-    assert {:ok, 1} = TestInjector.test(1)
+    assert {:ok, 1} = TestInjectx.test(1)
   end
 
   test "inject all implementation of Behavior" do
-    defmodule TestAllInjector do
+    defmodule TestAllInjectx do
       @moduledoc false
-      use Injector
+      use Injectx
 
       @implementations inject_all(TestBehaviour)
 
       def test(n), do: Enum.map(@implementations, fn impl -> impl.test(n) end)
     end
 
-    assert [{:ok, 1}, {:ok, 2}] = TestAllInjector.test(1)
+    assert [{:ok, 1}, {:ok, 2}] = TestAllInjectx.test(1)
   end
 
   test "sync dispatching to all implementation of Behavior" do
     defmodule SyncTestAllImplementations do
       @moduledoc false
-      use Injector
+      use Injectx
 
       def test(n), do: dispatching(TestBehaviour, :test, [n], async: false)
     end
 
-    assert [{:ok, InjectorTest.TestImpl1, {:ok, 1}}, {:ok, InjectorTest.TestImpl2, {:ok, 2}}] =
+    assert [{:ok, InjectxTest.TestImpl1, {:ok, 1}}, {:ok, InjectxTest.TestImpl2, {:ok, 2}}] =
              SyncTestAllImplementations.test(1)
   end
 
   test "async dispatching to all implementation of Behavior" do
     defmodule AsyncTestAllImplementations do
       @moduledoc false
-      use Injector
+      use Injectx
 
       def test(n), do: dispatching(TestBehaviour, :test, [n], async: true)
     end
