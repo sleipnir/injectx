@@ -24,6 +24,7 @@ defmodule InjectxTest do
 
   setup do
     definition = %Context{
+      name: ApplicationContext,
       bindings: [
         %Context.Binding{
           behavior: TestBehaviour,
@@ -35,15 +36,42 @@ defmodule InjectxTest do
       ]
     }
 
-    Context.from(definition)
+    ctx = Context.from(definition)
+    IO.inspect(ctx, label: "Context")
   end
 
-  test "inject the default implementation of Behavior" do
+  test "inject the default implementation of Behavior with macro" do
+    defmodule TestInjectxWithMacro do
+      @moduledoc false
+      use Injectx
+
+      inject(InjectxTest.TestBehaviour)
+
+      def test(n), do: TestBehaviour.test(n)
+    end
+
+    assert {:ok, 1} = TestInjectxWithMacro.test(1)
+  end
+
+  test "inject the default implementation of Behavior with macro and aliases" do
+    defmodule TestInjectxWithMacroAndAliases do
+      @moduledoc false
+      use Injectx
+
+      inject(InjectxTest.TestBehaviour, as: TB)
+
+      def test(n), do: TB.test(n)
+    end
+
+    assert {:ok, 1} = TestInjectxWithMacroAndAliases.test(1)
+  end
+
+  test "inject the default implementation of Behavior without macro" do
     defmodule TestInjectx do
       @moduledoc false
       use Injectx
 
-      @implementation inject(TestBehaviour)
+      @implementation Injectx.Context.inject(TestBehaviour)
 
       def test(n), do: @implementation.test(n)
     end
@@ -51,12 +79,12 @@ defmodule InjectxTest do
     assert {:ok, 1} = TestInjectx.test(1)
   end
 
-  test "inject all implementation of Behavior" do
+  test "inject all implementation of Behavior without macro" do
     defmodule TestAllInjectx do
       @moduledoc false
       use Injectx
 
-      @implementations inject_all(TestBehaviour)
+      @implementations Injectx.Context.inject_all(TestBehaviour)
 
       def test(n), do: Enum.map(@implementations, fn impl -> impl.test(n) end)
     end

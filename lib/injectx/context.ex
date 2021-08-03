@@ -1,5 +1,6 @@
 defmodule Injectx.Context do
   alias Injectx.Context
+  require Logger
 
   @type behavior :: module()
   @type implementation :: module()
@@ -43,10 +44,13 @@ defmodule Injectx.Context do
   def from(context) do
     case Agent.start_link(fn -> %{} end, name: context.name) do
       {:ok, _pid} ->
-        Agent.update(context.name, fn state -> Map.merge(state, %{bindings: context.bindings}) end)
+        Agent.get_and_update(context.name, fn state ->
+          merge = Map.merge(state, %{bindings: context.bindings})
+          {merge, merge}
+        end)
 
       {:error, {:already_started, _pid}} ->
-        :ok
+        Agent.get(context.name, fn state -> state end)
     end
   end
 
@@ -93,68 +97,44 @@ defmodule Injectx.Context do
     run_async(implementations, function_name, args)
   end
 
-  defp run(implementations, function_name, args, _opts \\ []) do
-    Enum.map(implementations, fn impl ->
-      try do
-        result = apply(impl, function_name, args)
-        {:ok, impl, result}
-      rescue
-        error -> {:error, impl, error}
-      end
-    end)
-  end
-
-  defp run_async(implementations, function_name, args, _opts \\ []) do
-    tasks =
-      Enum.reduce(implementations, [], fn impl, acc ->
-        [
-          Task.async(fn ->
-            try do
-              result = apply(impl, function_name, args)
-              {:ok, impl, result}
-            rescue
-              error -> {:error, impl, error}
-            end
-          end)
-          | acc
-        ]
-      end)
-
-    Enum.map(tasks, &Task.await/1)
-  end
-
   defp binding(name, behavior) do
-    Agent.get(name, fn bindings ->
-      definition =
-        bindings.bindings
-        |> Enum.filter(fn binding -> binding.behavior == behavior end)
-        |> Enum.flat_map(fn binding -> binding.definitions end)
-        |> Enum.find(fn definition -> definition.default end)
+    bindings = Agent.get(name, fn bindings -> bindings end)
 
-      # TODO: Future use
-      _module_name =
-        if definition.name != nil do
-          definition.name
-          |> to_string()
-          |> Code.eval_string()
-          |> case do
-            {m, []} -> m
-            _ -> raise "Attempt to resolve Alias failed"
-          end
-        else
-          behavior
-          |> Module.split()
-          |> List.last()
-          |> Kernel.<>("Impl")
-          |> Code.eval_string()
-          |> case do
-            {m, []} -> m
-            _ -> raise "Attempt to resolve Alias failed"
-          end
-        end
+    case bindings do
+      nil ->
+        Logger.error("Not found binds from context #{name}")
 
-      definition.module
-    end)
+      _ ->
+        definition =
+          bindings.bindings
+          |> Enum.filter(fn binding -> binding.behavior == behavior end)
+          |> Enum.flat_map(fn binding -> binding.definitions end)
+          |> Enum.find(fn definition -> definition.default end)
+
+        # TODO: Future use
+        _module_name =
+          if definition.name != nil do
+            definition.name
+            |> to_string()
+            |> Code.eval_string()
+            |> case do
+              {m, []} -> m
+              _ -> raise "Attempt to resolve Alias failed"
+            end
+          else
+            behavior
+            |> Module.split()
+            |> List.last()
+            |> Kernel.<>("Impl")
+            |> Code.eval_string()
+            |> case do
+              {m, []} -> m
+              _ -> raise "Attempt to resolve Alias failed"
+            end
+          end
+
+        definition.module
+    end
   end
 
   defp bindings(name, behavior) do
@@ -187,5 +167,35 @@ defmodule Injectx.Context do
         definition.module
       end)
     end)
+  end
+
+  defp run(implementations, function_name, args, _opts \\ []) do
+    Enum.map(implementations, fn impl ->
+      try do
+        result = apply(impl, function_name, args)
+        {:ok, impl, result}
+      rescue
+        error -> {:error, impl, error}
+      end
+    end)
+  end
+
+  defp run_async(implementations, function_name, args, _opts \\ []) do
+    tasks =
+      Enum.reduce(implementations, [], fn impl, acc ->
+        [
+          Task.async(fn ->
+            try do
+              result = apply(impl, function_name, args)
+              {:ok, impl, result}
+            rescue
+              error -> {:error, impl, error}
+            end
+          end)
+          | acc
+        ]
+      end)
+
+    Enum.map(tasks, &Task.await/1)
   end
 end
