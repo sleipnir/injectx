@@ -1,4 +1,4 @@
-# injectx
+# Injectx
 
 <!-- MDOC !-->
 
