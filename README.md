@@ -75,7 +75,7 @@ defmodule App do
 end
 ```
 
-Use your behavior via Implementation resolved in runtime (using inject macro):
+Use your behavior via Implementation resolved in runtime (using inject macro with same sintaxe of alias):
 
 ```elixir
 defmodule Bar do
