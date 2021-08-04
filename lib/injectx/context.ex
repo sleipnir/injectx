@@ -101,7 +101,10 @@ defmodule Injectx.Context do
     bindings =
       case Agent.start_link(fn -> %{} end, name: name) do
         {:ok, _pid} ->
-          Agent.get(name, fn bindings -> bindings end)
+          Agent.get_and_update(name, fn state ->
+            merge = Map.merge(state, %{bindings: %{}})
+            {merge, merge}
+          end)
 
         {:error, {:already_started, _pid}} ->
           Agent.get(name, fn bindings -> bindings end)
