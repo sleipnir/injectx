@@ -114,4 +114,19 @@ defmodule InjectxTest do
 
     assert [{:ok, _, {:ok, _}}, {:ok, _, {:ok, _}}] = AsyncTestAllImplementations.test(1)
   end
+
+  test "inject via configuration and using macro" do
+    Context.from_config()
+
+    defmodule TestInjectxViaConfig do
+      @moduledoc false
+      use Injectx
+
+      inject(InjectxTest.TestBehaviour)
+
+      def test(n), do: TestBehaviour.test(n)
+    end
+
+    assert {:ok, 1} = TestInjectxViaConfig.test(1)
+  end
 end

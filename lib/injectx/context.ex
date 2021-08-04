@@ -57,6 +57,7 @@ defmodule Injectx.Context do
   @spec from_config() :: :ok | {:error, :not_found}
   def from_config() do
     context = Application.get_env(:injectx, Injectx, :context)
+    {:context, context} = Enum.at(context, 0)
     from(context)
   end
 
@@ -104,7 +105,7 @@ defmodule Injectx.Context do
           Agent.get_and_update(name, fn state ->
             if state == %{} do
               # fallback from config file
-              context = Application.get_env(:injectx, Injectx, :context)
+              context = Application.get_env(:injectx, Injectx)
               {context, context}
             else
               {state, state}
