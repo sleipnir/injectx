@@ -98,7 +98,14 @@ defmodule Injectx.Context do
   end
 
   defp binding(name, behavior) do
-    bindings = Agent.get(name, fn bindings -> bindings end)
+    bindings =
+      case Agent.start_link(fn -> %{} end, name: name) do
+        {:ok, _pid} ->
+          Agent.get(name, fn bindings -> bindings end)
+
+        {:error, {:already_started, _pid}} ->
+          Agent.get(name, fn bindings -> bindings end)
+      end
 
     case bindings do
       nil ->
@@ -138,34 +145,41 @@ defmodule Injectx.Context do
   end
 
   defp bindings(name, behavior) do
-    Agent.get(name, fn bindings ->
-      bindings.bindings
-      |> Enum.filter(fn binding -> binding.behavior == behavior end)
-      |> Enum.flat_map(fn binding -> binding.definitions end)
-      |> Enum.map(fn definition ->
-        # TODO: Future use
-        _name =
-          if definition.name != nil do
-            definition.name
-            |> to_string()
-            |> Code.eval_string()
-            |> case do
-              {m, []} -> m
-              _ -> raise "Attempt to resolve Alias failed"
-            end
-          else
-            behavior
-            |> Module.split()
-            |> List.last()
-            |> Code.eval_string()
-            |> case do
-              {m, []} -> m
-              _ -> raise "Attempt to resolve Alias failed"
-            end
-          end
+    bindings =
+      case Agent.start_link(fn -> %{} end, name: name) do
+        {:ok, _pid} ->
+          Agent.get(name, fn bindings -> bindings end)
 
-        definition.module
-      end)
+        {:error, {:already_started, _pid}} ->
+          Agent.get(name, fn bindings -> bindings end)
+      end
+
+    bindings.bindings
+    |> Enum.filter(fn binding -> binding.behavior == behavior end)
+    |> Enum.flat_map(fn binding -> binding.definitions end)
+    |> Enum.map(fn definition ->
+      # TODO: Future use
+      _name =
+        if definition.name != nil do
+          definition.name
+          |> to_string()
+          |> Code.eval_string()
+          |> case do
+            {m, []} -> m
+            _ -> raise "Attempt to resolve Alias failed"
+          end
+        else
+          behavior
+          |> Module.split()
+          |> List.last()
+          |> Code.eval_string()
+          |> case do
+            {m, []} -> m
+            _ -> raise "Attempt to resolve Alias failed"
+          end
+        end
+
+      definition.module
     end)
   end
 
