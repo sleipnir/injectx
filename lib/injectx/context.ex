@@ -54,9 +54,9 @@ defmodule Injectx.Context do
     end
   end
 
-  @spec from_config(atom()) :: :ok | {:error, :not_found}
-  def from_config(otp_app) do
-    context = Application.get_env(otp_app, Injectx, :context)
+  @spec from_config() :: :ok | {:error, :not_found}
+  def from_config() do
+    context = Application.get_env(:injectx, Injectx, :context)
     from(context)
   end
 
@@ -98,25 +98,31 @@ defmodule Injectx.Context do
   end
 
   defp binding(name, behavior) do
-    bindings =
+    context =
       case Agent.start_link(fn -> %{} end, name: name) do
         {:ok, _pid} ->
           Agent.get_and_update(name, fn state ->
-            merge = Map.merge(state, %{bindings: %{}})
-            {merge, merge}
+            if state == %{} do
+              # fallback from config file
+              context = Application.get_env(:injectx, Injectx, :context)
+              merge = Map.merge(state, %{bindings: context.bindings})
+              {merge, merge}
+            else
+              {state, state}
+            end
           end)
 
         {:error, {:already_started, _pid}} ->
-          Agent.get(name, fn bindings -> bindings end)
+          Agent.get(name, fn state -> state end)
       end
 
-    case bindings do
+    case context do
       nil ->
         Logger.error("Not found binds from context #{name}")
 
       _ ->
         definition =
-          bindings.bindings
+          context.bindings
           |> Enum.filter(fn binding -> binding.behavior == behavior end)
           |> Enum.flat_map(fn binding -> binding.definitions end)
           |> Enum.find(fn definition -> definition.default end)
@@ -148,16 +154,25 @@ defmodule Injectx.Context do
   end
 
   defp bindings(name, behavior) do
-    bindings =
+    context =
       case Agent.start_link(fn -> %{} end, name: name) do
         {:ok, _pid} ->
-          Agent.get(name, fn bindings -> bindings end)
+          Agent.get_and_update(name, fn state ->
+            if state == %{} do
+              # fallback from config file
+              context = Application.get_env(:injectx, Injectx, :context)
+              merge = Map.merge(state, %{bindings: context.bindings})
+              {merge, merge}
+            else
+              {state, state}
+            end
+          end)
 
         {:error, {:already_started, _pid}} ->
           Agent.get(name, fn bindings -> bindings end)
       end
 
-    bindings.bindings
+    context.bindings
     |> Enum.filter(fn binding -> binding.behavior == behavior end)
     |> Enum.flat_map(fn binding -> binding.definitions end)
     |> Enum.map(fn definition ->
