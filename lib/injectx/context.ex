@@ -105,7 +105,8 @@ defmodule Injectx.Context do
           Agent.get_and_update(name, fn state ->
             if state == %{} do
               # fallback from config file
-              context = Application.get_env(:injectx, Injectx)
+              context = Application.get_env(:injectx, Injectx, :context)
+              {:context, context} = Enum.at(context, 0)
               {context, context}
             else
               {state, state}
@@ -161,15 +162,15 @@ defmodule Injectx.Context do
             if state == %{} do
               # fallback from config file
               context = Application.get_env(:injectx, Injectx, :context)
-              merge = Map.merge(state, %{bindings: context.bindings})
-              {merge, merge}
+              {:context, context} = Enum.at(context, 0)
+              {context, context}
             else
               {state, state}
             end
           end)
 
         {:error, {:already_started, _pid}} ->
-          Agent.get(name, fn bindings -> bindings end)
+          Agent.get(name, fn state -> state end)
       end
 
     context.bindings
