@@ -105,8 +105,7 @@ defmodule Injectx.Context do
             if state == %{} do
               # fallback from config file
               context = Application.get_env(:injectx, Injectx, :context)
-              merge = Map.merge(state, %{bindings: context.bindings})
-              {merge, merge}
+              {context, context}
             else
               {state, state}
             end
